@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Typography, Button, Form, message, Input, Icon } from "antd";
 import DropZone from "react-dropzone";
-import Axios from 'axios';
+import Axios from "axios";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -23,39 +23,57 @@ function VideoUploadPage() {
   const [Description, setDescription] = useState("");
   const [Private, setPrivate] = useState(0);
   const [Category, setCategory] = useState("Film & Animation");
+  const [FilePath, setFilePath] = useState("");
+  const [Duration, setDuration] = useState("");
+  const [ThumbnailPath, setThumbnailPath] = useState("");
 
   const onTitleChange = (e) => {
     setVideoTitle(e.currentTarget.value);
-  }
+  };
 
   const onDescriptionChange = (e) => {
     setDescription(e.currentTarget.value);
-  }
+  };
 
   const onPrivateChange = (e) => {
     setPrivate(e.currentTarget.value);
-  }
+  };
 
   const onCategoryChange = (e) => {
     setCategory(e.currentTarget.value);
-  }
+  };
 
   const onDrop = (files) => {
-    let formData = new FormData;
+    let formData = new FormData();
     const config = {
-      header: {'content-type': 'multimart/form-data'}
-    }
+      header: { "content-type": "multimart/form-data" },
+    };
     formData.append("file", files[0]);
 
-    Axios.post('/api/video/uploadfiles', formData, config)
-      .then(response => {
-        if(response.data.success) {
-          console.log(response.data);
-        } else {
-          alert("Video Upload Failed!!")
-        }
-      })
-  }
+    Axios.post("/api/video/uploadfiles", formData, config).then((response) => {
+      if (response.data.success) {
+        console.log(response.data);
+
+        let variable = {
+          url: response.data.url,
+          fileName: response.data.fileName,
+        };
+
+        setFilePath(response.data.url);
+
+        Axios.post("/api/video/thumbnail", variable).then((response) => {
+          if (response.data.success) {
+            setDuration(response.data.fileDuration);
+            setThumbnailPath(response.data.url);
+          } else {
+            alert("썸네일 생성에 실패했습니다.");
+          }
+        });
+      } else {
+        alert("Video Upload Failed!!");
+      }
+    });
+  };
 
   return (
     <div style={{ maxWidth: "700px", margin: "2rem auto" }}>
@@ -67,11 +85,7 @@ function VideoUploadPage() {
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           {/* Drop Zone */}
 
-          <DropZone 
-            onDrop={onDrop}
-            multiple={false}
-            maxSize={1000000}
-          >
+          <DropZone onDrop={onDrop} multiple={false} maxSize={1000000}>
             {({ getRootProps, getInputProps }) => (
               <div
                 style={{
@@ -91,9 +105,15 @@ function VideoUploadPage() {
           </DropZone>
 
           {/* Thumbnail */}
-          <div>
-            <img src alt />
-          </div>
+
+          {ThumbnailPath && (
+            <div>
+              <img
+                src={`http://localhost:5000/${ThumbnailPath}`}
+                alt="thumbnail"
+              />
+            </div>
+          )}
         </div>
         <br />
         <br />
