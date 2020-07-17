@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Typography, Button, Form, message, Input, Icon } from "antd";
 import DropZone from "react-dropzone";
 import Axios from "axios";
+import { useSelector } from "react-redux";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -18,10 +19,11 @@ const CategoryOptions = [
   { value: 3, label: "Pets & Animails" },
 ];
 
-function VideoUploadPage() {
+function VideoUploadPage(props) {
+  const user = useSelector((state) => state.user);
   const [VideoTitle, setVideoTitle] = useState("");
   const [Description, setDescription] = useState("");
-  const [Private, setPrivate] = useState(0);
+  const [Privacy, setPrivacy] = useState(0);
   const [Category, setCategory] = useState("Film & Animation");
   const [FilePath, setFilePath] = useState("");
   const [Duration, setDuration] = useState("");
@@ -36,7 +38,7 @@ function VideoUploadPage() {
   };
 
   const onPrivateChange = (e) => {
-    setPrivate(e.currentTarget.value);
+    setPrivacy(e.currentTarget.value);
   };
 
   const onCategoryChange = (e) => {
@@ -75,13 +77,39 @@ function VideoUploadPage() {
     });
   };
 
+  const onSubmit = (e) => {
+    e.preventDefault();
+
+    const variables = {
+      writer: user.userData._id,
+      title: VideoTitle,
+      description: Description,
+      privacy: Privacy,
+      filePath: FilePath,
+      category: Category,
+      duration: Duration,
+      thumbnail: ThumbnailPath,
+    };
+
+    Axios.post("/api/video/uploadVideo", variables).then((response) => {
+      if (response.data.success) {
+        message.success("Video Uploaded Successfully");
+        setTimeout(() => {
+          props.history.push("/");
+        }, 3000);
+      } else {
+        alert("Failed to upload video");
+      }
+    });
+  };
+
   return (
     <div style={{ maxWidth: "700px", margin: "2rem auto" }}>
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <Title level={2}>Upload Video</Title>
       </div>
 
-      <Form onSubmit>
+      <Form onSubmit={onSubmit}>
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           {/* Drop Zone */}
 
@@ -105,7 +133,6 @@ function VideoUploadPage() {
           </DropZone>
 
           {/* Thumbnail */}
-
           {ThumbnailPath && (
             <div>
               <img
@@ -130,7 +157,7 @@ function VideoUploadPage() {
 
         <select onChange={onPrivateChange}>
           {PrivateOptions.map((item, index) => (
-            <option key={index} value={item.valㄴe}>
+            <option key={index} value={item.value}>
               {item.label}
             </option>
           ))}
@@ -148,7 +175,7 @@ function VideoUploadPage() {
         <br />
         <br />
 
-        <Button type="primary" size="large" onClick>
+        <Button type="primary" size="large" onClick={onSubmit}>
           Submit
         </Button>
       </Form>
