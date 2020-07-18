@@ -65,7 +65,7 @@ router.post('/getVideoDetail', (req, res) => {
     })
 })
 
-router.get("/getvideos", (req, res) => {
+router.get("/getVideos", (req, res) => {
   // 비디오를 db에서 가져와 클라이언트에 보냄
   Video.find()
     .populate('writer')
