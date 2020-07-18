@@ -16,4 +16,5 @@ yarn-error.log*
 .idea
 .iml
 /*.iml
-!/uploads/
+
+/uploads/
