@@ -17,7 +17,7 @@ let storage = multer.diskStorage({
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     if (ext !== ".mp4") {
-      return cb(res.status(400).end("only mp4 is allowed"), false);
+      return cb(req.status(400).end("only mp4 is allowed"), false);
     }
     cb(null, true);
   },
@@ -54,6 +54,16 @@ router.post("/uploadVideo", (req, res) => {
     });
   });
 });
+
+router.post('/getVideoDetail', (req, res) => {
+
+  Video.findOne({ "_id" : req.body.videoId })
+    .populate('writer')
+    .exec((err, videoDetail) => {
+      if(err) return res.status(400).send(err);
+      return res.status(200).send({ success: true, videoDetail })
+    })
+})
 
 router.get("/getvideos", (req, res) => {
   // 비디오를 db에서 가져와 클라이언트에 보냄
