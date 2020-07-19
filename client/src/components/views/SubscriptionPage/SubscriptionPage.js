@@ -7,11 +7,18 @@ import moment from 'moment';
 const { Title } = Typography;
 const { Meta } = Card;
 
-function LandingPage() {
+function SubscriptionPage(props) {
+
   const [Videos, setVideos] = useState([]);
 
   useEffect(() => {
-    Axios.get("/api/video/getvideos").then((response) => {
+
+    const subscriptionVariables = {
+      userFrom : localStorage.getItem('userId')
+    }
+
+    Axios.post("/api/video/getSubscriptionVideos", subscriptionVariables)
+      .then((response) => {
       if (response.data.success) {
         console.log(response.data);
         setVideos(response.data.videos);
@@ -27,7 +34,7 @@ function LandingPage() {
     const seconds = Math.floor(video.duration - minutes * 60);
 
     return (
-      <Col lg={6} md={8} xs={24}>
+      <Col lg={6} md={8} xs={24} key={index}>
         <div style={{ position: "relative" }}>
           <a href={`/video/${video._id}`}>
             <img
@@ -74,11 +81,11 @@ function LandingPage() {
 
   return (
     <div style={{ width: "85%", margin: "3rem auto" }}>
-      <Title level={2}> Recommended </Title>
+      <Title level={2}> Subscribed Videos </Title>
       <hr />
       <Row gutter={[32, 16]}>{renderCards}</Row>
     </div>
   );
 }
 
-export default LandingPage;
+export default SubscriptionPage;

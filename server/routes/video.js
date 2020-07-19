@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { Video } = require("../models/Video");
+const {Video} = require("../models/Video");
+const { Subscriber } = require("../models/Subscriber");
+const {auth} = require("../middleware/auth");
 
-const { auth } = require("../middleware/auth");
 const multer = require("multer");
 const ffmpeg = require("fluent-ffmpeg");
 
@@ -23,7 +24,7 @@ let storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage }).single("file");
+const upload = multer({storage: storage}).single("file");
 
 //=================================
 //             Video
@@ -33,7 +34,7 @@ router.post("/uploadfiles", (req, res) => {
   // 비디오를 서버에 저장
   upload(req, res, (err) => {
     if (err) {
-      return res.json({ success: false, err });
+      return res.json({success: false, err});
     }
     return res.json({
       success: true,
@@ -48,7 +49,7 @@ router.post("/uploadVideo", (req, res) => {
   const video = new Video(req.body);
 
   video.save((err, video) => {
-    if (err) return res.status(400).json({ success: false, err });
+    if (err) return res.status(400).json({success: false, err});
     return res.status(200).json({
       success: true,
     });
@@ -57,11 +58,11 @@ router.post("/uploadVideo", (req, res) => {
 
 router.post('/getVideoDetail', (req, res) => {
 
-  Video.findOne({ "_id" : req.body.videoId })
+  Video.findOne({"_id": req.body.videoId})
     .populate('writer')
     .exec((err, videoDetail) => {
-      if(err) return res.status(400).send(err);
-      return res.status(200).send({ success: true, videoDetail })
+      if (err) return res.status(400).send(err);
+      return res.status(200).send({success: true, videoDetail})
     })
 })
 
@@ -70,10 +71,31 @@ router.get("/getVideos", (req, res) => {
   Video.find()
     .populate('writer')
     .exec((err, videos) => {
-      if(err) return res.status(400).send(err);
-      res.status(200).json({ success: true, videos })
+      if (err) return res.status(400).send(err);
+      res.status(200).json({success: true, videos})
     })
+});
 
+router.post("/getSubscriptionVideos", (req, res) => {
+  //Need to find all of the Users that I am subscribing to From Subscriber Collection
+  Subscriber.find({'userFrom': req.body.userFrom})
+    .exec((err, subscribers) => {
+      if (err) return res.status(400).send(err);
+
+      let subscribedUser = [];
+
+      subscribers.map((subscriber, i) => {
+        subscribedUser.push(subscriber.userTo)
+      })
+
+  //Need to Fetch all of the Videos that belong to the Users that I found in previous step.
+  Video.find({writer: {$in: subscribedUser}})
+    .populate('writer')
+    .exec((err, videos) => {
+      if (err) return res.status(400).send(err);
+      res.status(200).json({success: true, videos})
+    })
+  })
 });
 
 router.post("/thumbnail", (req, res) => {
@@ -106,7 +128,7 @@ router.post("/thumbnail", (req, res) => {
     })
     .on("error", function (err) {
       console.log(err);
-      return res.json({ success: false, err });
+      return res.json({success: false, err});
     })
     .screenshots({
       // Will take screenshots at 20%, 40%, 60% and 80% of the video
